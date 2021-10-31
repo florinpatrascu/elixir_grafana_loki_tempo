@@ -1,0 +1,86 @@
+version: "3.3"
+
+services:
+  app:
+    image: bitwalker/alpine-elixir-phoenix:latest
+    command: >
+      /bin/sh -c 'cd /app &&
+      mix local.hex --force &&
+      mix local.rebar --force &&
+      mix deps.get &&
+      exec elixir --sname app --cookie super_secret -S mix phx.server'
+    ports:
+      - "4000:4000"
+      - "4001:4001"
+      - "4021:4021"
+      - "4022:4022"
+    depends_on:
+      - loki
+      - tempo
+      - prometheus
+      - grafana
+    working_dir: /app
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+    volumes:
+      - ./app/config:/app/config:ro
+      - ./app/lib:/app/lib:ro
+      - ./app/priv:/app/priv:ro
+      - ./app/mix.exs:/app/mix.exs:ro
+      - ./app/mix.lock:/app/mix.lock:rw
+      - elixir-deps:/app/deps/
+      - elixir-build:/app/_build/
+
+  prometheus:
+    image: prom/prometheus:v2.20.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./service-configs/prometheus/:/etc/prometheus/
+      - ./data/prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/config.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+
+  loki:
+    image: grafana/loki:latest
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./service-configs/loki/loki-local.yaml:/etc/loki/loki-config.yaml
+      - ./data/loki-data:/tmp/loki
+    ports:
+      - "3100:3100"
+
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./service-configs/tempo/tempo-local.yaml:/etc/tempo.yaml
+      - ./data/tempo-data:/tmp/tempo
+    ports:
+      - 8000:8000 # tempo
+      - 55681:55681 # otlp http
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./service-configs/grafana/provisioning:/etc/grafana/provisioning/
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - "3000:3000"
+volumes:
+  elixir-deps: {}
+  elixir-build: {}
+  postgres-data: {}
+  postgres-loki: {}
+  postgres-tempo: {}
+  loki-data-index: {}
+  loki-data-chunks: {}
+  grafana-data: {}
