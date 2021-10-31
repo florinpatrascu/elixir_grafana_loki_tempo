@@ -50,7 +50,7 @@ Visit your local Grafana endpoint and select the `Explore` menu. With the Loki d
 
 If you expand the logs, you should be able to see a `Tempo` button. Click on it to view the associated trace. You'd probably see something similar to this:
 
-![](../elixir_grafana_loki_tempo/app/priv/static/Elixir_Exploring_Loki_Tempo_Grafana.png)
+![](app/priv/static/Elixir_Exploring_Loki_Tempo_Grafana.png)
 
 That's all 🤷🏻‍♂️
 
