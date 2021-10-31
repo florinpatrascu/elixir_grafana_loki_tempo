@@ -1,0 +1,58 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: tempo
+  - name: prometheus
+  - name: loki
+
+datasources:
+  - name: tempo
+    type: tempo
+    access: proxy
+    orgId: 1
+    url: http://tempo:8000
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+    apiVersion: 1
+    uid: tempo
+    jsonData:
+      nodeGraph:
+        enabled: true
+      tracesToLogs:
+        datasourceUid: loki
+        filterBySpanID: true
+        filterByTraceID: true
+        # tags: ["compose_service"]
+  - name: loki
+    type: loki
+    access: proxy
+    orgId: 1
+    url: http://loki:3100
+    basicAuth: false
+    isDefault: true
+    version: 1
+    editable: true
+    uid: loki
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: \"trace_id\":\"(\w+)\"
+          name: TraceID
+          url: $${__value.raw}
+  - name: prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090
+    # <bool> enable/disable basic auth
+    basicAuth: true
+    basicAuthUser: admin
+    basicAuthPassword: admin
+    jsonData:
+      graphiteVersion: "1.1"
+      tlsAuth: false
+      tlsAuthWithCACert: false
+    version: 1
+    editable: true

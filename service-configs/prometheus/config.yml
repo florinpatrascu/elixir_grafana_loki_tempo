@@ -1,0 +1,17 @@
+# Global Configurations
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+  external_labels:
+    monitor: "app"
+
+# Targets to scrape
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "app"
+    static_configs:
+      - targets: ["app:4000"]
