@@ -1,6 +1,7 @@
 defmodule FF.LoggerFormatter do
   @moduledoc """
   Custom Formatter for Loki, otherwise we emit GCP compatible log events.
+  Graciously borrowed from Alexander Koutmos's examples, details here: https://akoutmos.com/post/elixir-logging-loki/
   """
   import Jason.Helpers, only: [json_map: 1]
 
